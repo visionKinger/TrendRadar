@@ -36,6 +36,7 @@ jobs:
         fi
     
     - name: Run crawler
+      id: crawler
       env:
         FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -43,7 +44,165 @@ jobs:
         DINGTALK_WEBHOOK_URL: ${{ secrets.DINGTALK_WEBHOOK_URL }}
         WEWORK_WEBHOOK_URL: ${{ secrets.WEWORK_WEBHOOK_URL }}
         GITHUB_ACTIONS: true
-      run: python main.py
+      run: |
+        python main.py > crawler_output.log 2>&1
+        echo "exit_code=$?" >> $GITHUB_OUTPUT
+      continue-on-error: true
+    
+    - name: Check execution status
+      id: check_status
+      run: |
+        if [ "${{ steps.crawler.outputs.exit_code }}" = "0" ]; then
+          echo "status=success" >> $GITHUB_OUTPUT
+        else
+          echo "status=failed" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Extract statistics from output
+      id: extract_stats
+      run: |
+        if [ -f "index.html" ]; then
+          # Extract total titles from HTML
+          total_news=$(grep -o "Total Titles: [0-9]*" index.html | grep -o "[0-9]*" || echo "0")
+          echo "total_news=$total_news" >> $GITHUB_OUTPUT
+          
+          # Extract generation time
+          gen_time=$(grep -o "Generated Time: [0-9-]* [0-9:]*" index.html | sed 's/Generated Time: //' || echo "Unknown")
+          echo "gen_time=$gen_time" >> $GITHUB_OUTPUT
+          
+          # Count frequency words (top 5 hot topics)
+          hot_topics=$(grep -o "<td class=\"word\">[^<]*</td>" index.html | head -5 | sed 's/<[^>]*>//g' | tr '\n' ', ' | sed 's/, $//' || echo "None")
+          echo "hot_topics=$hot_topics" >> $GITHUB_OUTPUT
+        else
+          echo "total_news=0" >> $GITHUB_OUTPUT
+          echo "gen_time=Unknown" >> $GITHUB_OUTPUT
+          echo "hot_topics=None" >> $GITHUB_OUTPUT
+        fi
+        
+        # Check if there are any new titles
+        if [ -f "crawler_output.log" ]; then
+          new_count=$(grep -o "本次新增热点新闻.*共 [0-9]* 条" crawler_output.log | grep -o "[0-9]*" || echo "0")
+          echo "new_count=$new_count" >> $GITHUB_OUTPUT
+        else
+          echo "new_count=0" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Prepare email content
+      id: email_content
+      run: |
+        current_time=$(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S CST')
+        
+        if [ "${{ steps.check_status.outputs.status }}" = "success" ]; then
+          echo "subject=✅ TrendRadar 热点新闻爬取成功 - $current_time" >> $GITHUB_OUTPUT
+        else
+          echo "subject=❌ TrendRadar 热点新闻爬取失败 - $current_time" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Send Email Notification
+      uses: dawidd6/action-send-mail@v3
+      with:
+        # QQ SMTP Configuration
+        server_address: smtp.qq.com
+        server_port: 587
+        username: ${{ secrets.QQ_EMAIL_USERNAME }}
+        password: ${{ secrets.QQ_EMAIL_PASSWORD }}
+        subject: ${{ steps.email_content.outputs.subject }}
+        to: ${{ secrets.EMAIL_TO }}
+        from: ${{ secrets.QQ_EMAIL_USERNAME }}
+        html_body: |
+          <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+            <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+              <h1 style="color: #333; text-align: center; margin-bottom: 30px;">
+                📊 TrendRadar 热点新闻分析报告
+              </h1>
+              
+              <div style="background-color: ${{ steps.check_status.outputs.status == 'success' && '#d4edda' || '#f8d7da' }}; 
+                          border: 1px solid ${{ steps.check_status.outputs.status == 'success' && '#c3e6cb' || '#f5c6cb' }}; 
+                          border-radius: 5px; padding: 15px; margin-bottom: 25px;">
+                <h2 style="margin: 0; color: ${{ steps.check_status.outputs.status == 'success' && '#155724' || '#721c24' }};">
+                  状态：${{ steps.check_status.outputs.status == 'success' && '✅ 执行成功' || '❌ 执行失败' }}
+                </h2>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                <div style="background-color: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
+                  <h3 style="margin: 0 0 10px 0; color: #1976d2;">📰 总新闻数</h3>
+                  <p style="font-size: 24px; font-weight: bold; margin: 0; color: #333;">${{ steps.extract_stats.outputs.total_news }}</p>
+                </div>
+                
+                <div style="background-color: #f3e5f5; padding: 15px; border-radius: 8px; text-align: center;">
+                  <h3 style="margin: 0 0 10px 0; color: #7b1fa2;">🆕 新增新闻</h3>
+                  <p style="font-size: 24px; font-weight: bold; margin: 0; color: #333;">${{ steps.extract_stats.outputs.new_count }}</p>
+                </div>
+                
+                <div style="background-color: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
+                  <h3 style="margin: 0 0 10px 0; color: #388e3c;">⏰ 执行时间</h3>
+                  <p style="font-size: 14px; font-weight: bold; margin: 0; color: #333;">$(TZ=Asia/Shanghai date '+%H:%M:%S')</p>
+                </div>
+              </div>
+              
+              ${{ steps.check_status.outputs.status == 'success' && format('<div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; padding: 15px; margin-bottom: 25px;">
+                <h3 style="margin: 0 0 15px 0; color: #856404;">🔥 热门话题 TOP 5</h3>
+                <p style="margin: 0; color: #333; font-size: 16px; line-height: 1.5;">{0}</p>
+              </div>', steps.extract_stats.outputs.hot_topics) || '' }}
+              
+              <div style="background-color: #f8f9fa; border-radius: 5px; padding: 15px; margin-bottom: 25px;">
+                <h3 style="margin: 0 0 15px 0; color: #495057;">📋 执行详情</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6; font-weight: bold;">仓库：</td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6;">
+                      <a href="https://github.com/${{ github.repository }}" style="color: #007bff; text-decoration: none;">${{ github.repository }}</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6; font-weight: bold;">分支：</td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6;">${{ github.ref_name }}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6; font-weight: bold;">提交：</td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6;">
+                      <a href="https://github.com/${{ github.repository }}/commit/${{ github.sha }}" style="color: #007bff; text-decoration: none;">
+                        ${{ github.sha }}
+                      </a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6; font-weight: bold;">工作流：</td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #dee2e6;">
+                      <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="color: #007bff; text-decoration: none;">
+                        查看执行日志
+                      </a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; font-weight: bold;">生成时间：</td>
+                    <td style="padding: 8px 0;">${{ steps.extract_stats.outputs.gen_time }}</td>
+                  </tr>
+                </table>
+              </div>
+              
+              ${{ steps.check_status.outputs.status == 'success' && '<div style="text-align: center; margin-bottom: 25px;">
+                <a href="https://github.com/${{ github.repository }}/blob/main/index.html" 
+                   style="display: inline-block; background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                  📊 查看完整报告
+                </a>
+              </div>' || '' }}
+              
+              ${{ steps.check_status.outputs.status == 'failed' && '<div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; padding: 15px; margin-bottom: 25px;">
+                <h3 style="margin: 0 0 10px 0; color: #721c24;">❌ 错误信息</h3>
+                <p style="margin: 0; color: #721c24;">爬取过程中发生错误，请查看 <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="color: #721c24; font-weight: bold;">执行日志</a> 获取详细信息。</p>
+              </div>' || '' }}
+              
+              <hr style="border: none; border-top: 1px solid #dee2e6; margin: 25px 0;">
+              <p style="text-align: center; color: #6c757d; font-size: 14px; margin: 0;">
+                📧 这是来自 GitHub Actions 的自动邮件通知<br>
+                🤖 TrendRadar 热点新闻分析系统
+              </p>
+            </div>
+          </div>
+        attachments: ${{ steps.check_status.outputs.status == 'success' && 'index.html' || 'crawler_output.log' }}
+      if: always()
     
     - name: Commit and push if changes
       run: |
