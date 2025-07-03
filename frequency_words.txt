@@ -1,94 +1,298 @@
-胖东来
-于东来
+# 金融市场 - 央行政策
+美联储
+Fed
+ECB
+欧洲央行
+日本央行
+BOJ
+人民银行
+PBOC
++政策
 
-DeepSeek
-梁文锋
+# 金融市场 - 利率政策
+加息
+降息
+利率决议
+量化宽松
+QE
+缩表
+扩表
++央行
 
-华为
-任正非
-鸿蒙
-HarmonyOS
+# 汇率监控
+美元指数
+DXY
+汇率
+美元
+欧元
+日元
+人民币
+英镑
++波动
+!预测
 
-比亚迪
-王传福
+# 经济指标
+GDP
+通胀
+CPI
+失业率
+PMI
+零售销售
++数据
++增长
 
-宇树
-王兴兴
+# 金融风险预警
+金融危机
+银行破产
+债务违约
+市场崩盘
+流动性危机
+黑天鹅
+系统性风险
++爆发
 
-稚晖君
-智元
+# 地缘政治
+贸易战
+制裁
+地缘政治
+中美关系
+俄乌冲突
++风险
++影响
 
-黑神话
-冯骥
+# AI大模型 - OpenAI系列
+GPT-4
+GPT-5
+ChatGPT
+OpenAI
++发布
++更新
 
-哪吒
-饺子
-!车
-!餐
+# AI大模型 - 竞争对手
+Claude
+Gemini
+LLaMA
+Llama3
+Mistral
+GLM
+ChatGLM
++模型
++发布
 
-流浪地球
-郭帆
-三体
-刘慈欣
+# AI大模型 - 中国厂商
+文心一言
+通义千问
+Qwen
+百川
+智谱
+月之暗面
+Kimi
++发布
++升级
 
-米哈游
-原神
-星穹铁道
+# AI Agent框架
+LangChain
+LlamaIndex
+AutoGPT
+CrewAI
+AutoGen
+Agent
++框架
++工具
 
-京东
-刘强东
-
-字节
-张一鸣
-
-马斯克
-特斯拉
-
-微软
-Microsoft
-
-黄仁勋
-英伟达
-NVIDIA
-
-AMD
-
-谷歌
-google
-gemini
-deepmind
-
-chatgpt
-openai
-
-claude
+# AI公司动态
+OpenAI
 Anthropic
+Google DeepMind
+Meta AI
+Hugging Face
++融资
++发布
+!招聘
 
-iphone
-ipad
-mac
-ios
+# AI技术突破
+Transformer
+注意力机制
+RAG
+LoRA
+RLHF
++突破
++进展
 
-ai
-!gai
-人工智能
+# AI应用场景
+代码助手
+编程助手
+Copilot
+AI助手
++应用
++产品
 
-汽车
-自动驾驶
-l3
+# AI安全与对齐
+AI安全
+AI对齐
+对抗样本
+红队测试
++研究
++突破
 
-机器人
+# AI效率优化
+模型压缩
+量化
+推理优化
++技术
++方法
 
-芯片
-半导体
-光刻机
+# AI评估基准
+MMLU
+HumanEval
+BLEU
+ROUGE
+Chatbot Arena
++评测
++基准
 
-科技
+# 多模态AI
+多模态
+视觉语言
+Vision-Language
+CLIP
+DALL-E
+Midjourney
++模型
++技术
 
-核能
+# AI硬件与基础设施
+GPU
+NVIDIA
+TPU
+AI芯片
+算力
++发布
++突破
+!股价
 
-月球
-登月
-火星
-宇宙
-飞船
+# AI投资与商业
+AI投资
+AI融资
+AI独角兽
+AI估值
++轮次
++金额
+
+# AI政策与监管
+AI监管
+AI政策
+AI法案
+AI治理
++发布
++通过
+
+# AI研究机构
+斯坦福
+MIT
+CMU
+清华
+北大
++研究
++论文
+
+# AI会议与活动
+NeurIPS
+ICML
+ICLR
+ACL
+EMNLP
++会议
++论文
+
+# 新兴AI技术
+神经符号
+知识图谱
+因果推理
+强化学习
++技术
++方法
+
+# AI创业公司
+AI创业
+AI独角兽
++融资
++收购
+!传闻
+
+# AI开源项目
+开源模型
+开源AI
+Hugging Face
+GitHub
++发布
++项目
+
+# 量化交易与金融科技
+量化交易
+算法交易
+高频交易
+金融科技
+FinTech
++策略
++技术
+
+# 加密货币与数字资产
+比特币
+Bitcoin
+以太坊
+Ethereum
+加密货币
+数字货币
++价格
++政策
+!诈骗
+
+# 宏观经济政策
+财政刺激
+货币政策
+经济刺激
+基建投资
++政策
++计划
+
+# 科技股与成长股
+科技股
+成长股
+纳斯达克
+FAANG
++财报
++业绩
+
+# 债券市场
+收益率曲线
+国债收益率
+企业债
+信用利差
++变化
++走势
+
+# 商品期货
+原油
+黄金
+白银
+铜价
+大豆
++价格
++走势
+
+# 房地产市场
+房地产
+房价
+按揭利率
++政策
++数据
+!中介
+
+# 国际贸易
+进出口
+贸易顺差
+贸易逆差
+关税
++数据
++政策
