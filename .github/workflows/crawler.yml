@@ -14,7 +14,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -105,54 +105,67 @@ jobs:
     - name: Generate email body
       id: email_body
       run: |
+        # Set variables based on status
+        if [ "${{ steps.check_status.outputs.status }}" = "success" ]; then
+          status_bg="#d4edda"
+          border_color="#c3e6cb"
+          text_color="#155724"
+          status_text="执行成功 ✅"
+        else
+          status_bg="#f8d7da"
+          border_color="#f5c6cb"
+          text_color="#721c24"
+          status_text="执行失败 ❌"
+        fi
+
         cat <<EOF > email.html
-<div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
-  <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-    <h1 style="color: #333; text-align: center; margin-bottom: 30px;">
-      📊 TrendRadar 热点新闻分析报告
-    </h1>
+        <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+          <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h1 style="color: #333; text-align: center; margin-bottom: 30px;">
+              📊 TrendRadar 热点新闻分析报告
+            </h1>
 
-    <div style="background-color: ${status}; border: 1px solid ${border}; border-radius: 5px; padding: 15px; margin-bottom: 25px;">
-      <h2 style="margin: 0; color: ${text};">
-        状态：${status_text}
-      </h2>
-    </div>
+            <div style="background-color: $status_bg; border: 1px solid $border_color; border-radius: 5px; padding: 15px; margin-bottom: 25px;">
+              <h2 style="margin: 0; color: $text_color;">
+                状态：$status_text
+              </h2>
+            </div>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
-      <div style="background-color: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
-        <h3 style="margin: 0 0 10px 0; color: #1976d2;">📰 总新闻数</h3>
-        <p style="font-size: 24px; font-weight: bold; margin: 0; color: #333;">${{ steps.extract_stats.outputs.total_news }}</p>
-      </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+              <div style="background-color: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
+                <h3 style="margin: 0 0 10px 0; color: #1976d2;">📰 总新闻数</h3>
+                <p style="font-size: 24px; font-weight: bold; margin: 0; color: #333;">${{ steps.extract_stats.outputs.total_news }}</p>
+              </div>
 
-      <div style="background-color: #f3e5f5; padding: 15px; border-radius: 8px; text-align: center;">
-        <h3 style="margin: 0 0 10px 0; color: #7b1fa2;">🆕 新增新闻</h3>
-        <p style="font-size: 24px; font-weight: bold; margin: 0; color: #333;">${{ steps.extract_stats.outputs.new_count }}</p>
-      </div>
+              <div style="background-color: #f3e5f5; padding: 15px; border-radius: 8px; text-align: center;">
+                <h3 style="margin: 0 0 10px 0; color: #7b1fa2;">🆕 新增新闻</h3>
+                <p style="font-size: 24px; font-weight: bold; margin: 0; color: #333;">${{ steps.extract_stats.outputs.new_count }}</p>
+              </div>
 
-      <div style="background-color: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
-        <h3 style="margin: 0 0 10px 0; color: #388e3c;">⏰ 执行时间</h3>
-        <p style="font-size: 14px; font-weight: bold; margin: 0; color: #333;">${{ steps.email_content.outputs.current_time }}</p>
-      </div>
-    </div>
+              <div style="background-color: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
+                <h3 style="margin: 0 0 10px 0; color: #388e3c;">⏰ 执行时间</h3>
+                <p style="font-size: 14px; font-weight: bold; margin: 0; color: #333;">${{ steps.email_content.outputs.current_time }}</p>
+              </div>
+            </div>
 
-    <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; padding: 15px; margin-bottom: 25px;">
-      <h3 style="margin: 0 0 15px 0; color: #856404;">🔥 热门话题 TOP 5</h3>
-      <p style="margin: 0; color: #333; font-size: 16px; line-height: 1.5;">${{ steps.extract_stats.outputs.hot_topics }}</p>
-    </div>
+            <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; padding: 15px; margin-bottom: 25px;">
+              <h3 style="margin: 0 0 15px 0; color: #856404;">🔥 热门话题 TOP 5</h3>
+              <p style="margin: 0; color: #333; font-size: 16px; line-height: 1.5;">${{ steps.extract_stats.outputs.hot_topics }}</p>
+            </div>
 
-    <div style="background-color: #f8f9fa; border-radius: 5px; padding: 15px; margin-bottom: 25px;">
-      <h3 style="margin: 0 0 15px 0; color: #495057;">📋 执行详情</h3>
-      <table style="width: 100%; border-collapse: collapse;">
-        <tr><td style="padding: 8px 0; font-weight: bold;">仓库：</td><td><a href="https://github.com/${{ github.repository }}">{{ github.repository }}</a></td></tr>
-        <tr><td style="padding: 8px 0; font-weight: bold;">分支：</td><td>${{ github.ref_name }}</td></tr>
-        <tr><td style="padding: 8px 0; font-weight: bold;">提交：</td><td><a href="https://github.com/${{ github.repository }}/commit/${{ github.sha }}">${{ github.sha }}</a></td></tr>
-        <tr><td style="padding: 8px 0; font-weight: bold;">工作流：</td><td><a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">查看执行日志</a></td></tr>
-        <tr><td style="padding: 8px 0; font-weight: bold;">生成时间：</td><td>${{ steps.extract_stats.outputs.gen_time }}</td></tr>
-      </table>
-    </div>
-  </div>
-</div>
-EOF
+            <div style="background-color: #f8f9fa; border-radius: 5px; padding: 15px; margin-bottom: 25px;">
+              <h3 style="margin: 0 0 15px 0; color: #495057;">📋 执行详情</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr><td style="padding: 8px 0; font-weight: bold;">仓库：</td><td><a href="https://github.com/${{ github.repository }}">${{ github.repository }}</a></td></tr>
+                <tr><td style="padding: 8px 0; font-weight: bold;">分支：</td><td>${{ github.ref_name }}</td></tr>
+                <tr><td style="padding: 8px 0; font-weight: bold;">提交：</td><td><a href="https://github.com/${{ github.repository }}/commit/${{ github.sha }}">${{ github.sha }}</a></td></tr>
+                <tr><td style="padding: 8px 0; font-weight: bold;">工作流：</td><td><a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">查看执行日志</a></td></tr>
+                <tr><td style="padding: 8px 0; font-weight: bold;">生成时间：</td><td>${{ steps.extract_stats.outputs.gen_time }}</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        EOF
 
     - name: Send Email Notification
       uses: dawidd6/action-send-mail@v3
